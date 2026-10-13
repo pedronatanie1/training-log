@@ -12,9 +12,9 @@ CREATE TABLE muscle_groups (
 CREATE TABLE exercises (
 	id INT IDENTITY(1,1) PRIMARY KEY,
 	name NVARCHAR(100) NOT NULL UNIQUE,
-	muscle_groups_id INT NOT NULL,
+	muscle_group_id INT NOT NULL,
 	CONSTRAINT fk_exercises_muscle_group
-		FOREIGN KEY (muscle_groups_id) 
+		FOREIGN KEY (muscle_group_id) 
 			REFERENCES muscle_groups(id)
 );
 
