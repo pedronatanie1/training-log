@@ -5,12 +5,12 @@ USE TrainingLog;
 GO
 
 CREATE TABLE muscle_groups (
-	id INT PRIMARY KEY,
-	name NVARCHAR(50) NOT NULL UNIQUE,
+	id INT IDENTITY(1,1) PRIMARY KEY,
+	name NVARCHAR(50) NOT NULL UNIQUE
 );
 
 CREATE TABLE exercises (
-	id INT PRIMARY KEY,
+	id INT IDENTITY(1,1) PRIMARY KEY,
 	name NVARCHAR(100) NOT NULL UNIQUE,
 	muscle_groups_id INT NOT NULL,
 	CONSTRAINT fk_exercises_muscle_group
@@ -19,13 +19,13 @@ CREATE TABLE exercises (
 );
 
 CREATE TABLE workouts (
-	id INT PRIMARY KEY,
+	id INT IDENTITY(1,1) PRIMARY KEY,
 	workout_date DATE NOT NULL,
 	notes NVARCHAR(500)
 );
 
 CREATE TABLE workout_sets (
-	id INT PRIMARY KEY,
+	id INT IDENTITY(1,1) PRIMARY KEY,
 	workout_id INT NOT NULL,
 	exercise_id INT NOT NULL,
 	set_number INT NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE workout_sets (
 );
 
 CREATE TABLE body_metrics (
-	id INT PRIMARY KEY,
+	id INT IDENTITY(1,1) PRIMARY KEY,
 	metric_date DATE NOT NULL,
 	weight_kg DECIMAL(5, 2) NOT NULL,
 	CONSTRAINT ck_body_weight
