@@ -26,7 +26,7 @@ Five tables:
 | `workout_sets` | The sets in a workout: exercise, reps and weight |
 | `body_metrics` | Body weight over time |
 
-The ERD will be added to `docs/` once the design is finished.
+![Entity relationship diagram](docs/erd.png)
 
 ## Repository structure
 
