@@ -1,0 +1,56 @@
+// Training Log - SQL Server (T-SQL)
+// Source for docs/erd.png. Paste into https://dbdiagram.io to edit, then export as PNG.
+// Matches database/01_schema.sql and 06_indexes.sql
+
+Table muscle_groups {
+  id   int [pk, increment]
+  name nvarchar(50) [not null, unique]
+}
+
+Table exercises {
+  id              int [pk, increment]
+  name            nvarchar(100) [not null, unique]
+  muscle_group_id int [not null]
+
+  indexes {
+    muscle_group_id [name: 'ix_exercises_muscle_group']
+  }
+}
+
+Table workouts {
+  id           int [pk, increment]
+  workout_date date [not null]
+  notes        nvarchar(500) [null]
+
+  indexes {
+    workout_date [name: 'ix_workouts_date']
+  }
+}
+
+Table workout_sets {
+  id               int [pk, increment]
+  workout_id       int [not null]
+  exercise_id      int [not null]
+  set_number       int [not null, note: 'CHECK > 0']
+  reps             int [null, note: 'CHECK NULL or > 0']
+  weight_kg        decimal(6,2) [not null, note: 'CHECK >= 0 (0 = bodyweight; weighted bodyweight = added load)']
+  duration_seconds int [null, note: 'CHECK NULL or > 0']
+  distance_metres  decimal(7,2) [null, note: 'CHECK NULL or > 0']
+
+  indexes {
+    (workout_id, exercise_id, set_number) [unique, name: 'uq_set']
+    exercise_id [name: 'ix_sets_exercise']
+  }
+
+  Note: 'ck_sets_has_measure: every set needs reps, duration_seconds or distance_metres'
+}
+
+Table body_metrics {
+  id          int [pk, increment]
+  metric_date date [not null, unique]
+  weight_kg   decimal(5,2) [not null, note: 'CHECK BETWEEN 20 AND 400']
+}
+
+Ref fk_exercises_muscle_group: exercises.muscle_group_id > muscle_groups.id
+Ref fk_sets_workout: workout_sets.workout_id > workouts.id [delete: cascade]
+Ref fk_sets_exercise: workout_sets.exercise_id > exercises.id
