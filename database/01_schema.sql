@@ -1,5 +1,17 @@
+/* Optional reset: allows re-running every script on a clean database.
+USE master;
+GO
+
+IF DB_ID('TrainingLog') IS NOT NULL
+BEGIN
+ALTER DATABASE TrainingLog SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+DROP DATABASE TrainingLog;
+END;
+GO
+
 CREATE DATABASE TrainingLog;
 GO
+*/
 
 USE TrainingLog;
 GO
@@ -9,7 +21,7 @@ GO
 -- Stores the muscle groups targeted by exercises.
 -- =====================================================
 
-CREATE TABLE dbo.muscle_groups
+CREATE TABLE dbo.muscle_groups 
 (
     id INT IDENTITY(1,1) PRIMARY KEY,
     name NVARCHAR(50) NOT NULL UNIQUE
@@ -62,9 +74,8 @@ CREATE TABLE dbo.workout_sets
     workout_id INT NOT NULL,
     exercise_id INT NOT NULL,
     set_number INT NOT NULL,
-    reps INT NOT NULL,
+    reps INT NULL,
     weight_kg DECIMAL(6,2) NOT NULL,
-
     duration_seconds INT NULL,
     distance_metres DECIMAL(7,2) NULL,
 
@@ -84,7 +95,7 @@ CREATE TABLE dbo.workout_sets
         CHECK (set_number > 0),
 
     CONSTRAINT ck_sets_reps
-        CHECK (reps > 0),
+        CHECK (reps IS NULL OR reps > 0),
 
     CONSTRAINT ck_sets_weight
         CHECK (weight_kg >= 0),
@@ -93,7 +104,10 @@ CREATE TABLE dbo.workout_sets
         CHECK (duration_seconds IS NULL OR duration_seconds > 0),
 
     CONSTRAINT ck_sets_distance
-        CHECK (distance_metres IS NULL OR distance_metres > 0)
+        CHECK (distance_metres IS NULL OR distance_metres > 0),
+
+    CONSTRAINT ck_sets_has_measure
+        CHECK (reps IS NOT NULL OR duration_seconds IS NOT NULL OR distance_metres IS NOT NULL)
 );
 GO
 
@@ -106,7 +120,7 @@ GO
 CREATE TABLE dbo.body_metrics
 (
     id INT IDENTITY(1,1) PRIMARY KEY,
-    metric_date DATE NOT NULL,
+    metric_date DATE NOT NULL UNIQUE,
     weight_kg DECIMAL(5,2) NOT NULL,
 
     CONSTRAINT ck_body_weight
