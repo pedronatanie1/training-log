@@ -41,6 +41,31 @@ The script is committed in its failing form on purpose: the third set has `-5` r
 
 This proves the database never keeps a partial workout. The Week 2 API relies on the same idea, because Entity Framework's `SaveChanges` wraps the workout and its sets in one transaction.
 
+## Views
+
+`database/04_views.sql` creates two views for reports I run often:
+
+| View | One row per | Shows |
+|---|---|---|
+| `vw_workout_history` | workout | date, notes, total sets, exercises done, total volume (kg), total duration (s), total distance (m) |
+| `vw_weekly_volume` | ISO week and muscle group | volume (kg) for each muscle group each week |
+
+**Volume** is reps × weight, summed. Timed and distance sets have no reps, so they add nothing to volume; `ISNULL(..., 0)` shows 0 instead of NULL when a group has only those sets. Duration and distance get their own totals in `vw_workout_history`.
+
+```sql
+SELECT * FROM dbo.vw_workout_history ORDER BY workout_date;
+SELECT * FROM dbo.vw_weekly_volume ORDER BY year_number, week_number, muscle_group;
+```
+
+I checked one week's Chest volume by hand against the seed data, and it matches the view.
+
+## Known limitations
+
+- **ISO weeks around New Year.** `vw_weekly_volume` takes the week from `DATEPART(ISO_WEEK, ...)` but the year from `DATEPART(YEAR, ...)`. ISO week 52 or 53 can belong to the previous year, so for a few days around 1 January the year and week can look mismatched (for example, 1 January 2027 shows as week 53 of 2027 instead of 2026). The sample data (September to October) isn't affected.
+- **Volume counts only rep-based sets.** Timed and distance sets are tracked separately.
+- **Weighted bodyweight exercises** (weighted pull-ups, dips) store only the added weight, so their volume is lower than the true load.
+- **One body weight entry per day**, enforced by a UNIQUE constraint.
+
 ## Repository structure
 
 ```
