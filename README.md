@@ -23,10 +23,23 @@ Five tables:
 | `muscle_groups` | Chest, back, legs and so on |
 | `exercises` | Each exercise, linked to a muscle group |
 | `workouts` | One row per training session |
-| `workout_sets` | The sets in a workout: exercise, reps and weight |
-| `body_metrics` | Body weight over time |
+| `workout_sets` | The sets in a workout: exercise, weight, and reps, a duration or a distance |
+| `body_metrics` | Body weight over time, one entry per day |
 
 ![Entity relationship diagram](docs/erd.png)
+
+## Transaction: all or nothing
+
+A workout and its sets must be saved together. Without a transaction, a failure halfway through would leave a workout with only some of its sets. `database/03_log_workout_transaction.sql` inserts a workout and three sets inside `BEGIN TRY` / `BEGIN TRANSACTION`, with `SET XACT_ABORT ON` and a `ROLLBACK` in the `CATCH` block.
+
+The script is committed in its failing form on purpose: the third set has `-5` reps, which the `ck_sets_reps` CHECK constraint rejects. To reproduce the proof:
+
+1. **Run the script as it is.** It fails with a CHECK constraint error on `ck_sets_reps`.
+2. **Check nothing was saved:** `SELECT * FROM dbo.workouts WHERE notes = 'Transaction test';` returns no rows. The workout was inserted before the failure, but the rollback undid it along with the first two sets.
+3. **Change `-5` to `5` and run it again.** This time the workout and all three sets are saved.
+4. **Clean up:** `DELETE FROM dbo.workouts WHERE notes = 'Transaction test';` removes the test workout, and `ON DELETE CASCADE` removes its sets.
+
+This proves the database never keeps a partial workout. The Week 2 API relies on the same idea, because Entity Framework's `SaveChanges` wraps the workout and its sets in one transaction.
 
 ## Repository structure
 
