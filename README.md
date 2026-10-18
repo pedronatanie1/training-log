@@ -66,6 +66,29 @@ I checked one week's Chest volume by hand against the seed data, and it matches 
 - **Weighted bodyweight exercises** (weighted pull-ups, dips) store only the added weight, so their volume is lower than the true load.
 - **One body weight entry per day**, enforced by a UNIQUE constraint.
 
+## Indexes
+
+`database/06_indexes.sql` adds three indexes on columns used often in joins and filters. SQL Server indexes primary keys and UNIQUE columns automatically, but not foreign keys.
+
+| Index | Column | Helps with |
+|---|---|---|
+| `ix_sets_exercise` | `workout_sets.exercise_id` | all sets of one exercise (personal records, progress) |
+| `ix_workouts_date` | `workouts.workout_date` | date filters and ordering (history, weekly volume) |
+| `ix_exercises_muscle_group` | `exercises.muscle_group_id` | joining exercises to muscle groups |
+
+There is no separate index on `workout_sets.workout_id`: the `uq_set` unique constraint `(workout_id, exercise_id, set_number)` already created one that starts with it, and a second one would only slow down writes.
+
+**Measuring it.** `docs/index_check.sql` runs two queries with `SET STATISTICS IO ON` and the actual execution plan, before and after creating the indexes:
+
+| Query | Before | After |
+|---|---|---|
+| Sets for one exercise (9 rows) | Index Scan on `uq_set`, 2 logical reads | Index Seek on `ix_sets_exercise`, 2 logical reads |
+| Workouts in a date range (5 rows) | Clustered Index Scan, 3 logical reads | Index Seek on `ix_workouts_date`, 2 logical reads |
+
+Before the new index, SQL Server answered the first query by scanning the whole `uq_set` index: it contains `exercise_id` (plus the primary key), but as its second column, so it can't seek on it. With `ix_sets_exercise` it seeks straight to the matching rows.
+
+With only a few hundred rows the difference in reads is small (0 and 1 page), because each table fits in a handful of pages. The change that matters is from scan to seek: a scan grows with the table, a seek doesn't. Indexes pay off at scale, and this check shows how to confirm one is actually used.
+
 ## Repository structure
 
 ```
