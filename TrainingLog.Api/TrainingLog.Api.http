@@ -1,4 +1,4 @@
-@TrainingLog.Api_HostAddress = http://localhost:5000
+@TrainingLog.Api_HostAddress = http://localhost:5097
 
 GET {{TrainingLog.Api_HostAddress}}/api/exercises
 Accept: application/json

@@ -1,7 +1,7 @@
-﻿using TrainingLog.Api.Repositories;
-using TrainingLog.Api.Dtos;
+﻿using TrainingLog.Api.Dtos;
 using TrainingLog.Api.Entities;
 using TrainingLog.Api.Exceptions;
+using TrainingLog.Api.Repositories;
 
 namespace TrainingLog.Api.Services
 {
@@ -38,7 +38,7 @@ namespace TrainingLog.Api.Services
 
             if (string.IsNullOrEmpty(name))
             {
-                throw new BadRequestException("Exercuse name is required.");
+                throw new BadRequestException("Exercise name is required.");
             }
 
             if (name.Length > 100)
@@ -53,7 +53,7 @@ namespace TrainingLog.Api.Services
 
             if (await _exercises.NameExistsAsync(name))
             {
-                throw new BadRequestException($"An exercise name {name} already exists.");
+                throw new BadRequestException($"An exercise named {name} already exists.");
             }
 
             var saved = await _exercises.AddAsync(new Exercise
@@ -67,8 +67,8 @@ namespace TrainingLog.Api.Services
             return ToDto(loaded!);
         }
 
-        private static ExerciseDto ToDto(Exercise e) => 
+        private static ExerciseDto ToDto(Exercise e) =>
             new(e.Id, e.Name, e.MuscleGroup?.Name ?? string.Empty);
-        
+
     }
 }
