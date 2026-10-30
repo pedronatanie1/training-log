@@ -4,7 +4,7 @@ using TrainingLog.Api.Entities;
 
 namespace TrainingLog.Api.Repositories
 {
-    internal class ExerciseRepository : IExerciseRepository
+    public class ExerciseRepository : IExerciseRepository
     {
         private readonly TrainingLogContext _context;
 

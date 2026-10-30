@@ -4,7 +4,7 @@ using System.Text;
 
 namespace TrainingLog.Api.Entities
 {
-    internal class BodyMetric
+    public class BodyMetric
     {
         public int Id { get; set; }
         public DateOnly Date { get; set; }

@@ -2,7 +2,7 @@
 
 namespace TrainingLog.Api.Repositories
 {
-    internal interface IExerciseRepository
+    public interface IExerciseRepository
     {
         Task<List<Exercise>> GetAllAsync();
         Task<Exercise?> GetByIdAsync(int id);

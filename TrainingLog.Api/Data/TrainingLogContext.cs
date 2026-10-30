@@ -3,7 +3,7 @@ using TrainingLog.Api.Entities;
 
 namespace TrainingLog.Api.Data
 {
-    internal class TrainingLogContext : DbContext
+    public class TrainingLogContext : DbContext
     {
         public TrainingLogContext(DbContextOptions<TrainingLogContext> options) : base(options){
         }

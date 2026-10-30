@@ -2,7 +2,7 @@
 
 namespace TrainingLog.Api.Repositories
 {
-    internal interface IMuscleGroupRepository
+    public interface IMuscleGroupRepository
     {
         Task<List<MuscleGroup>> GetAllAsync();
         Task<bool> ExistsAsync(int id);

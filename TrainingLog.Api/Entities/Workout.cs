@@ -1,6 +1,6 @@
 ﻿namespace TrainingLog.Api.Entities
 {
-    internal class Workout
+    public class Workout
     {
         public int Id { get; set; }
         public DateOnly Date { get; set; }
