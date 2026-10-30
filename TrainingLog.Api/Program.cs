@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TrainingLog.Api.Data;
+using TrainingLog.Api.Exceptions;
 using TrainingLog.Api.Repositories;
 using TrainingLog.Api.Services;
 
@@ -20,7 +21,13 @@ builder.Services.AddScoped<ExerciseService>();
 
 builder.Services.AddOpenApi();
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
