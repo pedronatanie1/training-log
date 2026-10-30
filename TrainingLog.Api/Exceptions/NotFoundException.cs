@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace TrainingLog.Api.Exceptions
+﻿namespace TrainingLog.Api.Exceptions
 {
     public class NotFoundException : Exception
     {

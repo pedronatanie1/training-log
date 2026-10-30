@@ -18,8 +18,8 @@ namespace TrainingLog.Api.Exceptions
             var (status, title) = exception switch
             {
                 BadRequestException => (StatusCodes.Status400BadRequest, "Invalid request"),
-                NotFoundException   => (StatusCodes.Status404NotFound, "Not found"),
-                _                   => (StatusCodes.Status500InternalServerError, "Server error")
+                NotFoundException => (StatusCodes.Status404NotFound, "Not found"),
+                _ => (StatusCodes.Status500InternalServerError, "Server error")
             };
 
             if (status == StatusCodes.Status500InternalServerError)

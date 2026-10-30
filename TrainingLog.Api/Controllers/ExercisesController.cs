@@ -2,7 +2,7 @@
 using TrainingLog.Api.Dtos;
 using TrainingLog.Api.Services;
 
-namespace TrainingLog.Api.Controllers 
+namespace TrainingLog.Api.Controllers
 {
     [ApiController]
     [Route("api/exercises")]

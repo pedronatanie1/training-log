@@ -5,7 +5,8 @@ namespace TrainingLog.Api.Data
 {
     public class TrainingLogContext : DbContext
     {
-        public TrainingLogContext(DbContextOptions<TrainingLogContext> options) : base(options){
+        public TrainingLogContext(DbContextOptions<TrainingLogContext> options) : base(options)
+        {
         }
 
         public DbSet<MuscleGroup> MuscleGroups => Set<MuscleGroup>();
