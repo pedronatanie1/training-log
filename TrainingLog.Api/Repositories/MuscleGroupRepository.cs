@@ -4,7 +4,7 @@ using TrainingLog.Api.Entities;
 
 namespace TrainingLog.Api.Repositories
 {
-    public class MuscleGroupRepository
+    public class MuscleGroupRepository : IMuscleGroupRepository
     {
         private readonly TrainingLogContext _context;
 
