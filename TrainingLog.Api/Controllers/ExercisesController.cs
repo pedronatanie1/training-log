@@ -16,13 +16,13 @@ namespace TrainingLog.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<ExerciseDTO>>> GetAll()
+        public async Task<ActionResult<List<ExerciseDto>>> GetAll()
         {
             return Ok(await _service.GetAllAsync());
         }
 
         [HttpPost]
-        public async Task<ActionResult<ExerciseDTO>> Create(CreateExerciseRequest request)
+        public async Task<ActionResult<ExerciseDto>> Create(CreateExerciseRequest request)
         {
             var created = await _service.CreateAsync(request);
             return Created($"/api/exercises/{created.Id}", created);

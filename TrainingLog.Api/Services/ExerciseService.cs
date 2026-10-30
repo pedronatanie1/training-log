@@ -18,21 +18,21 @@ namespace TrainingLog.Api.Services
             _muscleGroups = muscleGroups;
         }
 
-        public async Task<List<MuscleGroupDTO>> GetMuscleGroupsAsync()
+        public async Task<List<MuscleGroupDto>> GetMuscleGroupsAsync()
         {
             var groups = await _muscleGroups.GetAllAsync();
 
-            return groups.Select(g => new MuscleGroupDTO(g.Id, g.Name)).ToList();
+            return groups.Select(g => new MuscleGroupDto(g.Id, g.Name)).ToList();
         }
 
-        public async Task<List<ExerciseDTO>> GetAllAsync()
+        public async Task<List<ExerciseDto>> GetAllAsync()
         {
             var exercises = await _exercises.GetAllAsync();
 
             return exercises.Select(ToDto).ToList();
         }
 
-        public async Task<ExerciseDTO> CreateAsync(CreateExerciseRequest request)
+        public async Task<ExerciseDto> CreateAsync(CreateExerciseRequest request)
         {
             var name = request.Name?.Trim();
 
@@ -67,7 +67,7 @@ namespace TrainingLog.Api.Services
             return ToDto(loaded!);
         }
 
-        private static ExerciseDTO ToDto(Exercise e) => 
+        private static ExerciseDto ToDto(Exercise e) => 
             new(e.Id, e.Name, e.MuscleGroup?.Name ?? string.Empty);
         
     }

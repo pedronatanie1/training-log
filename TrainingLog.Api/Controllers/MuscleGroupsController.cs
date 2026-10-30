@@ -16,7 +16,7 @@ namespace TrainingLog.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<MuscleGroupDTO>>> GetAll()
+        public async Task<ActionResult<List<MuscleGroupDto>>> GetAll()
         {
             return Ok(await _service.GetMuscleGroupsAsync());
         }
