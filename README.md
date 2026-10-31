@@ -2,17 +2,22 @@
 
 A training log for recording gym workouts, built as a SQL Server database with an ASP.NET Core API on top. I'm building it for my own training, and as a way to practise database design, layered architecture and testing.
 
-**Status:** in progress (started October 2026). The database is complete; the API is next.
+**Status:** in progress (started October 2026). The database is complete. The API is in progress: exercises and workout logging work end to end; body metrics, reports and unit tests are next.
 
 ## Plan
 
 - [x] SQL Server database: schema, sample data, a transaction, views, reports and indexes
 - [ ] ASP.NET Core Web API with controllers, services and repositories, plus unit tests
+  - [x] Layered structure, EF Core, DTOs and global error handling
+  - [x] Exercises and muscle groups endpoints
+  - [x] Workout logging with validation and a transactional save
+  - [ ] Body metrics and reports endpoints
+  - [ ] Unit tests (xUnit, fake repositories)
 - [ ] Front-end, login, deployment and an AI feature (later)
 
 ## Tech
 
-SQL Server (T-SQL) for the database. Planned for the API: C#, ASP.NET Core, Entity Framework Core, xUnit.
+SQL Server (T-SQL) for the database. The API uses C#, ASP.NET Core (.NET 10) and Entity Framework Core 10. Planned: xUnit for unit tests.
 
 ## How to run
 
@@ -31,6 +36,14 @@ Requirements: SQL Server LocalDB (installed with Visual Studio) or any SQL Serve
 | `06_indexes.sql` | Adds indexes on the most-used foreign keys and filter columns |
 
 `01_schema.sql` starts with a reset block, so running 01 to 06 again always gives a clean database. Script 03 stops with an error by design; the other scripts don't depend on it.
+
+### Running the API
+
+Requirements: the .NET 10 SDK, and the database created with the scripts above.
+
+1. Check the connection string `TrainingLog` in `TrainingLog.Api/appsettings.json` points to your server (by default `(localdb)\MSSQLLocalDB`, database `TrainingLog`).
+2. Open `TrainingLog.slnx` in Visual Studio and run the `http` profile, or run `dotnet run --project TrainingLog.Api` from the repo root.
+3. The API listens on `http://localhost:5097`. `TrainingLog.Api/TrainingLog.Api.http` has a ready-made request for every endpoint, including the validation checks.
 
 ## Database design
 
@@ -70,6 +83,50 @@ The script is committed in its failing form on purpose: the third set has `-5` r
 4. **Clean up:** `DELETE FROM dbo.workouts WHERE notes = 'Transaction test';` removes the test workout, and `ON DELETE CASCADE` removes its sets.
 
 This proves the database never keeps a partial workout. The API will rely on the same idea, because Entity Framework's `SaveChanges` wraps the workout and its sets in one transaction.
+
+## The API (in progress)
+
+An ASP.NET Core Web API on top of the database, built in layers so each part has one job:
+
+```
+Controller  →  Service  →  Repository  →  EF Core  →  SQL Server
+(HTTP only)    (rules)     (queries)
+```
+
+- **Controllers** read the request, call one service method and choose the status code. No business rules or queries.
+- **Services** hold the validation and mapping, and throw `BadRequestException` or `NotFoundException` when something is wrong. They depend on repository interfaces, not on EF Core, so they can be unit tested with fakes.
+- **Repositories** contain every EF Core query.
+- **DTOs** (C# records) define the JSON the API accepts and returns, so entities never leave the API.
+- **A global exception handler** (`IExceptionHandler`) turns those exceptions into `400` and `404` responses in the standard `ProblemDetails` format. Unexpected errors return `500` without internal details and are logged with the stack trace.
+
+### Endpoints so far
+
+| Method | Route | Purpose | Success |
+|---|---|---|---|
+| GET | `/api/muscle-groups` | All muscle groups | 200 |
+| GET | `/api/exercises` | All exercises with their muscle group | 200 |
+| POST | `/api/exercises` | Add an exercise (name required, unique, valid muscle group) | 201 |
+| GET | `/api/workouts?count=10` | Most recent workouts with their sets | 200 |
+| GET | `/api/workouts/{id}` | One workout with its sets and exercise names | 200 / 404 |
+| POST | `/api/workouts` | Log a workout and all its sets in one request | 201 |
+| DELETE | `/api/workouts/{id}` | Delete a workout (its sets are deleted by cascade) | 204 / 404 |
+
+Logging a workout is validated before anything touches the database: a date that isn't in the future, notes up to 500 characters, at least one set, positive set numbers, each set has reps, a duration or a distance, positive values, weights within the column's range, no repeated set number for the same exercise, and every exercise must exist. Timed and distance sets simply leave `reps` out:
+
+```json
+{
+  "date": "2026-10-30",
+  "notes": "Push day",
+  "sets": [
+    { "exerciseId": 1, "setNumber": 1, "reps": 8, "weightKg": 35 },
+    { "exerciseId": 43, "setNumber": 1, "weightKg": 0, "durationSeconds": 20 }
+  ]
+}
+```
+
+### Transaction proof through the API
+
+The SQL script above proves the database never keeps a partial workout. I repeated the proof through the API: with the API's "reps must be greater than 0" check temporarily disabled, I sent a workout whose third set had `reps = -5`. The database's `ck_sets_reps` constraint rejected the insert and the API returned 500. The number of rows in `workouts` and `workout_sets` was the same before and after, so the workout and its first two valid sets were rolled back too. EF Core's `SaveChanges` wraps the workout and all its sets in one transaction. The check was then restored, so normally the API returns a clear 400 before the database is reached.
 
 ## Views
 
@@ -157,6 +214,9 @@ With only a few hundred rows the difference in reads is small (0 and 1 page), be
 - **Weighted bodyweight exercises** (weighted pull-ups, dips) store only the added weight, so their volume is lower than the true load.
 - **One body weight entry per day**, enforced by a UNIQUE constraint.
 - **Sample data.** The workouts follow my real weekly routine, but the dates, weights and body weight entries are sample values, not a real training log.
+- **Duplicate exercise names return 400.** A 409 Conflict would be more precise; 400 keeps the error handling simple for now.
+- **No authentication yet.** Anyone who can reach the API can read and change data.
+- **Security pin.** `System.Security.Cryptography.Pkcs` is referenced directly to override a vulnerable version pulled in by the SQL Server driver.
 
 ## Repository structure
 
@@ -167,8 +227,17 @@ training-log/
 │   ├── erd.png            entity relationship diagram
 │   ├── erd.dbml           diagram source for dbdiagram.io
 │   └── index_check.sql    before/after index measurement
-├── TrainingLog.Api/       (next: ASP.NET Core Web API)
+├── TrainingLog.Api/       ASP.NET Core Web API (in progress)
+│   ├── Controllers/       HTTP endpoints
+│   ├── Services/          validation and business rules
+│   ├── Repositories/      EF Core queries, behind interfaces
+│   ├── Entities/          classes mapped to the tables
+│   ├── Dtos/              request and response records
+│   ├── Exceptions/        custom exceptions and the global handler
+│   ├── Data/              TrainingLogContext
+│   └── TrainingLog.Api.http   example requests for every endpoint
 ├── TrainingLog.Tests/     (next: unit tests)
+├── TrainingLog.slnx
 ├── .gitignore
 ├── LICENSE
 └── README.md
@@ -176,7 +245,7 @@ training-log/
 
 ## Next
 
-An ASP.NET Core Web API on top of this database: controllers, services and repositories, Entity Framework Core, global error handling and xUnit tests with fake repositories.
+Finish the API: body metrics, reports (personal records, progress, weekly volume) and xUnit tests for the services using fake repositories. Then a React front-end, login and deployment.
 
 ## Author
 
