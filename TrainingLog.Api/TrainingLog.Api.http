@@ -1,4 +1,7 @@
 @TrainingLog.Api_HostAddress = http://localhost:5097
+@benchId = 1
+@ropesId = 43
+@workoutId = 0
 
 GET {{TrainingLog.Api_HostAddress}}/api/exercises
 Accept: application/json
@@ -39,5 +42,96 @@ POST {{TrainingLog.Api_HostAddress}}/api/exercises
 Content-Type: application/json
 
 { "name": "Test", "muscleGroupId": 999 }
+
+###
+
+### ---------- WORKOUTS ----------
+
+# Log a workout: expect 201. Copy the "id" from the response into @workoutId at the top.
+POST {{TrainingLog.Api_HostAddress}}/api/workouts
+Content-Type: application/json
+
+{
+  "date": "2026-10-30",
+  "notes": "Push day",
+  "sets": [
+    { "exerciseId": {{benchId}}, "setNumber": 1, "reps": 8, "weightKg": 35 },
+    { "exerciseId": {{benchId}}, "setNumber": 2, "reps": 8, "weightKg": 35 },
+    { "exerciseId": {{ropesId}}, "setNumber": 1, "weightKg": 0, "durationSeconds": 20 }
+  ]
+}
+
+###
+
+# Check 1: expect 200, sets with exercise names; Battle Ropes shows "reps": null, "durationSeconds": 20
+GET {{TrainingLog.Api_HostAddress}}/api/workouts/{{workoutId}}
+Accept: application/json
+
+###
+
+# Check 2: expect the new workout first (if its date is the newest)
+GET {{TrainingLog.Api_HostAddress}}/api/workouts
+Accept: application/json
+
+###
+
+# Check 3: reps 0, expect 400 "Reps must be greater than 0."
+POST {{TrainingLog.Api_HostAddress}}/api/workouts
+Content-Type: application/json
+
+{
+  "date": "2026-10-30",
+  "sets": [
+    { "exerciseId": {{benchId}}, "setNumber": 1, "reps": 0, "weightKg": 35 }
+  ]
+}
+
+###
+
+# Check 4: no reps, duration or distance, expect 400 "Each set needs reps, a duration or a distance."
+POST {{TrainingLog.Api_HostAddress}}/api/workouts
+Content-Type: application/json
+
+{
+  "date": "2026-10-30",
+  "sets": [
+    { "exerciseId": {{benchId}}, "setNumber": 1, "weightKg": 35 }
+  ]
+}
+
+###
+
+# Check 5: exercise that doesn't exist, expect 400 "Exercise 9999 does not exist."
+POST {{TrainingLog.Api_HostAddress}}/api/workouts
+Content-Type: application/json
+
+{
+  "date": "2026-10-30",
+  "sets": [
+    { "exerciseId": 9999, "setNumber": 1, "reps": 8, "weightKg": 35 }
+  ]
+}
+
+###
+
+# Check 6: expect 204 the first time, 404 the second time
+DELETE {{TrainingLog.Api_HostAddress}}/api/workouts/{{workoutId}}
+
+###
+
+# TRANSACTION PROOF: only with the "Reps must be greater than 0" check commented out.
+# Expect 500. Then confirm nothing was saved (see the SQL check).
+POST {{TrainingLog.Api_HostAddress}}/api/workouts
+Content-Type: application/json
+
+{
+  "date": "2026-10-29",
+  "notes": "Transaction proof",
+  "sets": [
+    { "exerciseId": {{benchId}}, "setNumber": 1, "reps": 8, "weightKg": 35 },
+    { "exerciseId": {{benchId}}, "setNumber": 2, "reps": 8, "weightKg": 35 },
+    { "exerciseId": {{benchId}}, "setNumber": 3, "reps": -5, "weightKg": 35 }
+  ]
+}
 
 ###
