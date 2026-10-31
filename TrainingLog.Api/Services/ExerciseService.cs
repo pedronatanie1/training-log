@@ -53,7 +53,7 @@ namespace TrainingLog.Api.Services
 
             if (await _exercises.NameExistsAsync(name))
             {
-                throw new BadRequestException($"An exercise named {name} already exists.");
+                throw new BadRequestException($"An exercise named '{name}' already exists.");
             }
 
             var saved = await _exercises.AddAsync(new Exercise

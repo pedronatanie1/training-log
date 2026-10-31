@@ -28,4 +28,4 @@ public record SetHistoryRow(
     string MuscleGroup,
     DateOnly Date,
     int? Reps,
-    decimal Weightkg);
+    decimal WeightKg);
