@@ -16,18 +16,18 @@ namespace TrainingLog.Api.Repositories
         public async Task<List<Exercise>> GetAllAsync()
         {
             return await _context.Exercises
-            .Include(e => e.MuscleGroup)
-            .AsNoTracking()
-            .OrderBy(e => e.Name)
-            .ToListAsync();
+                .Include(e => e.MuscleGroup)
+                .AsNoTracking()
+                .OrderBy(e => e.Name)
+                .ToListAsync();
         }
 
         public async Task<Exercise?> GetByIdAsync(int id)
         {
             return await _context.Exercises
-            .Include(e => e.MuscleGroup)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(e => e.Id == id);
+                .Include(e => e.MuscleGroup)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(e => e.Id == id);
         }
 
         public async Task<bool> NameExistsAsync(string name)
